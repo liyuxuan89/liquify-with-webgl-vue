@@ -1,6 +1,15 @@
 module.exports = {
     devServer: {
-        // 项目启动端口之后会变成3000
-        port: 5000
+        port: 8080
+    },
+    configureWebpack: {
+        module: {
+            rules: [
+                {
+                    test: /\.glsl$/,
+                    use: 'raw-loader'
+                }
+            ]
+        }
     }
 }
