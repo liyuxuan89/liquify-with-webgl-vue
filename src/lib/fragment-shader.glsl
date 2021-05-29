@@ -1,7 +1,5 @@
 precision mediump float;
 uniform sampler2D u_image;
-uniform vec2 u_scale;
-uniform vec2 u_offset;
 uniform vec2 u_move;
 uniform vec2 u_center;
 uniform vec2 u_resolution;
@@ -21,10 +19,18 @@ void main() {
             gl_FragColor = texture2D(u_image, pos);
         } else {
             vec2 move = u_move;
-            if(length(move) > 0.3 * u_radius) {
-                move = move * u_radius / length(move) * 0.3;
+            if(length(move) > 0.5 * u_radius) {
+                move = move * u_radius / length(move) * 0.5;
             }
-            pos = pos - move * (1.0 - dis / u_radius);
+            // 一些几何运算
+            vec2 endpoint = u_center + move;
+            vec2 norm_vec = (v_position - endpoint) / length(v_position - endpoint);
+            vec2 vp = dot(move, norm_vec) * norm_vec;
+            float lenH = length(endpoint-vp-u_center);
+            float lenHalf = sqrt(u_radius * u_radius - lenH * lenH);
+            float ratio =  length(v_position - endpoint) / length(lenHalf*norm_vec - vp);
+
+            pos = pos - move * (1.0 - ratio);
             pos = (pos + 1.0) / 2.0;
             pos = pos * u_resolution;
             vec2 pos1 = vec2(floor(pos.x), floor(pos.y));

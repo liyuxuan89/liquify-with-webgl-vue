@@ -107,7 +107,7 @@ export default {
       else if(this.down && this.mode === 1) {
         let x = (e.x / this.scale - this.offsetX) / this.canvas.width * 2 - 1
         let y = (e.y / this.scale - this.offsetY) / this.canvas.height * 2 - 1
-        Tools.processImage(x, y, x - this.startX, y - this.startY)
+        Tools.processImage(this.startX, this.startY, x - this.startX, y - this.startY)
       }
     },
     mouseUp(){

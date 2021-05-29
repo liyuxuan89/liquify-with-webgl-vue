@@ -45,9 +45,7 @@ class Tools {
             gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textures[i], 0);
         }
-        this.offsetUniformLocation = gl.getUniformLocation(this.program, "u_offset");
         this.processUniformLocation = gl.getUniformLocation(this.program, "u_process");
-        this.scaleUniformLocation = gl.getUniformLocation(this.program, "u_scale");
         this.radiusUniformLocation = gl.getUniformLocation(this.program, "u_radius");
         this.moveUniformLocation = gl.getUniformLocation(this.program, "u_move");
         this.centerUniformLocation = gl.getUniformLocation(this.program, "u_center");
