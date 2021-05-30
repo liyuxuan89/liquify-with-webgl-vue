@@ -1,7 +1,7 @@
 <template>
   <div id="canvas-container">
     <canvas id="canvas"
-            :style="{transform: `scale(${scale}, ${scale})  translate(${offsetX}px, ${offsetY}px)`}"
+            :style="{transform: `translate(${offsetX}px, ${offsetY}px) scale(${scale}, ${scale})`}"
             @mousedown="mouseDown($event)"
             @mousemove="mouseMove($event)"
             @mouseup="mouseUp"
@@ -57,8 +57,8 @@ export default {
       let scale_x = window.innerWidth / this.image.width
       let scale_y = window.innerHeight / this.image.height
       this.scale = scale_x < scale_y ? scale_x : scale_y
-      this.offsetX = (window.innerWidth / this.scale - this.image.width) / 2
-      this.offsetY = (window.innerHeight / this.scale - this.image.height) / 2
+      this.offsetX = (window.innerWidth - this.image.width * this.scale) / 2
+      this.offsetY = (window.innerHeight - this.image.height * this.scale) / 2
     },
     upload(){
       document.getElementById("image-upload").click()
@@ -79,35 +79,29 @@ export default {
       link.click()
     },
     zoom() {
-      let ratio = this.scale / (this.scale + 0.1)
-      this.offsetX = this.offsetX * ratio
-      this.offsetY = this.offsetY * ratio
-      this.scale = this.scale + 0.1
-      this.offsetX = this.offsetX + this.image.width * 0.5 * (ratio - 1)
-      this.offsetY = this.offsetY + this.image.height * 0.5 * (ratio - 1)
+      this.scale += 0.1
     },
     shrink() {
-      let ratio = this.scale / (this.scale - 0.1)
-      this.offsetX = this.offsetX * ratio
-      this.offsetY = this.offsetY * ratio
-      this.scale = this.scale - 0.1
-      this.offsetX = this.offsetX + this.image.width * 0.5 * (ratio - 1)
-      this.offsetY = this.offsetY + this.image.height * 0.5 * (ratio - 1)
+      this.scale -= 0.1
     },
     mouseDown(e){
       this.down = true
-      this.startX = (e.x / this.scale - this.offsetX) / this.canvas.width * 2 - 1
-      this.startY = (e.y / this.scale - this.offsetY) / this.canvas.height * 2 - 1
+      this.startX = e.x
+      this.startY = e.y
+      this.startOffsetX = this.offsetX
+      this.startOffsetY = this.offsetY
     },
     mouseMove(e) {
       if(this.down && this.mode === 0){
-        this.offsetX = this.offsetX + e.movementX / this.scale
-        this.offsetY = this.offsetY + e.movementY / this.scale
+        this.offsetX = this.startOffsetX + e.x - this.startX
+        this.offsetY = this.startOffsetY + e.y - this.startY
       }
       else if(this.down && this.mode === 1) {
-        let x = (e.x / this.scale - this.offsetX) / this.canvas.width * 2 - 1
-        let y = (e.y / this.scale - this.offsetY) / this.canvas.height * 2 - 1
-        Tools.processImage(this.startX, this.startY, x - this.startX, y - this.startY)
+        let startX = (this.startX - this.offsetX)/  (this.canvas.width*this.scale) * 2 - 1
+        let startY = (this.startY - this.offsetY) / (this.canvas.height*this.scale) * 2 - 1
+        let x = (e.x - this.offsetX) / (this.canvas.width*this.scale) * 2 - 1
+        let y = (e.y - this.offsetY) / (this.canvas.height*this.scale) * 2 - 1
+        Tools.processImage(startX, startY, x - startX, y - startY)
       }
     },
     mouseUp(){

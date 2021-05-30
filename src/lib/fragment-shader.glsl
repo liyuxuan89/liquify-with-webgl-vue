@@ -30,7 +30,7 @@ void main() {
             float lenHalf = sqrt(u_radius * u_radius - lenH * lenH);
             float ratio =  length(v_position - endpoint) / length(lenHalf*norm_vec - vp);
 
-            pos = pos - move * (1.0 - ratio);
+            pos = pos - move * (1.0 + 2.0*ratio*ratio*ratio - 3.0*ratio*ratio);
             pos = (pos + 1.0) / 2.0;
             pos = pos * u_resolution;
             vec2 pos1 = vec2(floor(pos.x), floor(pos.y));
