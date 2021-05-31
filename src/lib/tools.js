@@ -11,16 +11,16 @@ class Tools {
         this.program = program
 
         // buffer 存放数据
-        let positionBuffer = gl.createBuffer()
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-        let positions = [-1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0]
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
+        this.positionBuffer = gl.createBuffer()
+        // gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
+        // let positions = [-1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0]
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
 
         // 设置attribute
-        let positionAttributeLocation = gl.getAttribLocation(program, "a_position")
-        gl.enableVertexAttribArray(positionAttributeLocation)
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0)
+        this.positionAttributeLocation = gl.getAttribLocation(program, "a_position")
+        // gl.enableVertexAttribArray(this.positionAttributeLocation)
+        // gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
+        // gl.vertexAttribPointer(this.positionAttributeLocation, 2, gl.FLOAT, false, 0, 0)
 
         gl.clearColor(0, 0, 0, 0)
         gl.clear(gl.COLOR_BUFFER_BIT)
@@ -38,7 +38,8 @@ class Tools {
         this.textures.push(this.createAndSetupTexture(gl));
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         this.textures.push(this.createAndSetupTexture(gl));
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, image.width, image.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         for(let i=0; i<2; i++){
             let fbo = gl.createFramebuffer();
             this.frameBuffers.push(fbo);
@@ -50,13 +51,39 @@ class Tools {
         this.moveUniformLocation = gl.getUniformLocation(this.program, "u_move");
         this.centerUniformLocation = gl.getUniformLocation(this.program, "u_center");
         this.resolutionUniformLocation = gl.getUniformLocation(this.program, "u_resolution")
+        this.flipYUniformLocation = gl.getUniformLocation(this.program, "u_flipY")
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-        this.processImage()
+
+        let positions = [-1., -1., -1., 1., 1., -1., 1., -1., -1., 1., 1., 1.]
+        this.setRenderRegion(positions)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures[this.idx]);
+        gl.uniform1f(this.processUniformLocation, false);
+        gl.uniform1f(this.flipYUniformLocation, true)
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    static processImage(center_x=0, center_y=0, move_x=0, move_y=0, radius=0.2){
+    static setRenderRegion(positions){
+        // 设置
+        let gl = this.gl
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
+        // 设置读取
+        gl.enableVertexAttribArray(this.positionAttributeLocation)
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
+        gl.vertexAttribPointer(this.positionAttributeLocation, 2, gl.FLOAT, false, 0, 0)
+    }
+
+    static processImage(center_x=0., center_y=0., move_x=0., move_y=0., radius=0.2){
         // 进行图像处理
         let gl = this.gl
+        let positions = [
+            center_x-radius, center_y-radius, center_x-radius, center_y+radius,
+            center_x+radius, center_y-radius, center_x+radius, center_y-radius,
+            center_x-radius, center_y+radius, center_x+radius, center_y+radius
+        ]
+        this.setRenderRegion(positions)
+
         this.idx_f = (this.idx + 1) % 2
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffers[this.idx_f])
         gl.bindTexture(gl.TEXTURE_2D, this.textures[this.idx])
@@ -66,15 +93,38 @@ class Tools {
         gl.uniform1f(this.processUniformLocation, true)
         gl.uniform1f(this.radiusUniformLocation, radius);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-        // 渲染最终结果
+
+        //渲染最终结果
+        positions = [
+            center_x-radius, -center_y-radius, center_x-radius, -center_y+radius,
+            center_x+radius, -center_y-radius, center_x+radius, -center_y-radius,
+            center_x-radius, -center_y+radius, center_x+radius, -center_y+radius
+        ]
+        this.setRenderRegion(positions)
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.bindTexture(gl.TEXTURE_2D, this.textures[this.idx_f]);
-        gl.uniform1f(this.processUniformLocation, false);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures[this.idx_f])
+        gl.uniform1f(this.processUniformLocation, false)
+        gl.uniform1f(this.flipYUniformLocation, true)
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
-    static next(){
+    static next(center_x=0., center_y=0., radius=0.2){
+        let gl = this.gl
         this.idx = (this.idx + 1) % 2
+        this.idx_f = (this.idx + 1) % 2
+        let positions = [
+            center_x-radius, center_y-radius, center_x-radius, center_y+radius,
+            center_x+radius, center_y-radius, center_x+radius, center_y-radius,
+            center_x-radius, center_y+radius, center_x+radius, center_y+radius
+        ]
+        this.setRenderRegion(positions)
+
+        this.idx_f = (this.idx + 1) % 2
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffers[this.idx_f])
+        gl.bindTexture(gl.TEXTURE_2D, this.textures[this.idx])
+        gl.uniform1f(this.processUniformLocation, false)
+        gl.uniform1f(this.flipYUniformLocation, false)
+        gl.drawArrays(gl.TRIANGLES, 0, 6)
     }
 
     // 创建着色器方法

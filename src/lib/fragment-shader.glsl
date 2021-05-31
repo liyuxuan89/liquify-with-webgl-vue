@@ -4,12 +4,15 @@ uniform vec2 u_move;
 uniform vec2 u_center;
 uniform vec2 u_resolution;
 uniform float u_radius;
+uniform bool u_flipY;
 uniform bool u_process; // 是否进行图像处理
 varying vec2 v_position; // 渲染位置
 void main() {
     vec2 pos = v_position;
     if(!u_process){
-        pos.y = -pos.y;
+        if(u_flipY){
+            pos.y = -pos.y;
+        }
         pos = (pos + 1.0) / 2.0;
         gl_FragColor = texture2D(u_image, pos);
     } else {
@@ -46,6 +49,5 @@ void main() {
             vec4 c34 = (pos.y - floor(pos.y)) * c4 + (1. - pos.y + floor(pos.y)) * c3;
             gl_FragColor = (pos.x - floor(pos.x)) * c34 + (1. - pos.x + floor(pos.x)) * c12;
         }
-
     }
 }

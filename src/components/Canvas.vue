@@ -101,13 +101,17 @@ export default {
         let startY = (this.startY - this.offsetY) / (this.canvas.height*this.scale) * 2 - 1
         let x = (e.x - this.offsetX) / (this.canvas.width*this.scale) * 2 - 1
         let y = (e.y - this.offsetY) / (this.canvas.height*this.scale) * 2 - 1
+        // startY = -startY
+        // y = -y
         Tools.processImage(startX, startY, x - startX, y - startY)
       }
     },
     mouseUp(){
       this.down = false
       if(this.mode === 1){
-        Tools.next()
+        let startX = (this.startX - this.offsetX)/  (this.canvas.width*this.scale) * 2 - 1
+        let startY = (this.startY - this.offsetY) / (this.canvas.height*this.scale) * 2 - 1
+        Tools.next(startX, startY)
       }
     }
   }
